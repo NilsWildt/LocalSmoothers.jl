@@ -211,7 +211,7 @@ version = "1.11.0"
 deps = ["AppleAccelerate", "ConcreteStructs", "LinearAlgebra", "MKL", "Random", "Statistics", "TestItems"]
 git-tree-sha1 = "1abadc7fa2888cf06ddf355af550c0cb42557856"
 repo-rev = "216362b49dd126f09db5cff974b3581984ce7e05"
-repo-url = "https://github.com/NilsWildt/SimpleKernelregression.jl.git"
+repo-url = "https://github.com/NilsWildt/SimpleKernelregression.jl"
 uuid = "47c81bad-6c13-54dd-8d7a-198cdd0ce79a"
 version = "0.1.0"
 

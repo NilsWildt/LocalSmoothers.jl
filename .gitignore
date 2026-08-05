@@ -1,0 +1,13 @@
+*.jl.cov
+*.jl.*.cov
+*.jl.mem
+*.cov
+
+# editor / OS / tooling
+.DS_Store
+.omc/
+.vscode/
+
+# generated docs
+/docs/build
+/docs/Manifest.toml

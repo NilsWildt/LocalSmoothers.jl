@@ -9,6 +9,11 @@ PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
 SimpleKernelRegression = "47c81bad-6c13-54dd-8d7a-198cdd0ce79a"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
+# SimpleKernelRegression is unregistered; point Pkg at its git repo so this
+# package can be instantiated without manually adding the dependency by URL.
+[sources]
+SimpleKernelRegression = {url = "https://github.com/NilsWildt/SimpleKernelregression.jl", rev = "216362b49dd126f09db5cff974b3581984ce7e05"}
+
 [compat]
 Aqua = "0.8"
 DispatchDoctor = "0.4"
