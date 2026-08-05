@@ -35,13 +35,14 @@ import SimpleKernelRegression:
     SKernel, Gaussian, Imq, Mq, Polynomial, Linear, Epanechnikov, Wendland,
     evalKmatrix, evalKernel, get_kernel_interpolant
 
-export Smoother, LAS, LASb, LLSS, LLSSb, FRSS, Kernelsmooth, NWKernelsmooth
+export Smoother, LAS, LASb, LLSS, LLSSb, FRSS, Supsmu, Kernelsmooth, NWKernelsmooth
 export do_smoothing, do_smoothing!, loocv, validate_inputs
 # kernels (re-exported from SimpleKernelRegression for ergonomics)
 export SKernel, Gaussian, Imq, Mq, Polynomial, Linear, Epanechnikov, Wendland
 export evalKmatrix, evalKernel, get_kernel_interpolant
 
 include("smoothers.jl")
+include("supsmu.jl")
 include("frss.jl")
 include("kernelsmoothing.jl")
 include("chain.jl")
@@ -53,6 +54,7 @@ include("chain.jl")
         do_smoothing(x, y, sm)
     end
     do_smoothing(x, y, FRSS([0.05, 0.1, 0.5], 0.2, 0.2))
+    do_smoothing(x, y, Supsmu())
     do_smoothing(x, y, NWKernelsmooth(Gaussian(0.2)))
     do_smoothing(x, y, Kernelsmooth(Gaussian(0.2)))
 end
