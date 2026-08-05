@@ -4,9 +4,7 @@
 [![CI](https://github.com/NilsWildt/LocalSmoothers.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/NilsWildt/LocalSmoothers.jl/actions/workflows/CI.yml)
 
 A small, dependency-light collection of **local smoothers** for nonparametric
-regression — fast, type-stable, and allocation-friendly. Extracted from
-[ACE.jl](https://github.com/NilsWildt/ACE.jl) so the smoothers can be reused
-on their own.
+regression, see [ACE](https://github.com/NilsWildt/AlternatingConditionalExpectations.jl).
 
 ## Smoothers
 
