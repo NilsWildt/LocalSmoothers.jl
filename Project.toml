@@ -17,14 +17,14 @@ SimpleKernelRegression = {url = "https://github.com/NilsWildt/SimpleKernelregres
 [compat]
 Aqua = "0.8"
 DispatchDoctor = "0.4"
-JET = "0.10"
+JET = "0.12"
 PrecompileTools = "1"
 SimpleKernelRegression = "0.1"
 Statistics = "1"
 Test = "1"
 TestItemRunner = "1"
 TestItems = "1"
-julia = "1.12"
+julia = "1.13"
 
 [extras]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
