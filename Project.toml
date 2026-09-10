@@ -12,7 +12,7 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 # SimpleKernelRegression is unregistered; point Pkg at its git repo so this
 # package can be instantiated without manually adding the dependency by URL.
 [sources]
-SimpleKernelRegression = {url = "https://github.com/NilsWildt/SimpleKernelregression.jl", rev = "216362b49dd126f09db5cff974b3581984ce7e05"}
+SimpleKernelRegression = {url = "https://github.com/NilsWildt/SimpleKernelregression.jl", rev = "000cb14740f77826498b30e406baab4b1c707c8c"}
 
 [compat]
 Aqua = "0.8"
