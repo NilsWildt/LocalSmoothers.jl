@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: ['1.12']
+        version: ['1.13']
         # SimpleKernelRegression pulls in AppleAccelerate; CI runs on the
         # Apple-Silicon runner that matches the verified-green dev environment.
         os: [macos-latest]
