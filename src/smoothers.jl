@@ -25,6 +25,11 @@ forcing the window to be odd.
     return Int((w - 1) ÷ 2)
 end
 
+# Window of `2k + 1` points around `i`, shifted inward at the edges instead of
+# truncated. `validate_inputs` guarantees `2k + 1 <= n`.
+shifted_window(i::Int, k::Int, n::Int) = (lo = clamp(i - k, 1, n - 2k); lo:(lo + 2k))
+truncated_window(i::Int, k::Int, n::Int) = max(1, i - k):min(n, i + k)
+
 """
     LAS(window::Integer)
 
@@ -96,7 +101,7 @@ free (works on views).
     return ym - β * xm + β * xi
 end
 
-# Linear regression over the union of two index ranges (used by LLSSb).
+# Linear regression over the union of two index ranges (used by loocv).
 @inline @stable function linear_regression_ranges(x::AbstractVector{T}, y::AbstractVector{T},
                                                    r1::UnitRange{Int}, r2::UnitRange{Int}, xi::T) where {T<:Real}
     n = length(r1) + length(r2)
@@ -163,15 +168,12 @@ end
     n = length(y)
     result = Vector{T}(undef, n)
     @inbounds for i in 1:n
-        left_start = max(1, i - k) - min(0, n - i - k + 1)
-        right_end = min(i + k, n) + min(0, i - k)
+        r = shifted_window(i, k, n)
         s = zero(T)
-        count = 0
-        @simd for j in left_start:right_end
+        @simd for j in r
             s += y[j]
-            count += 1
         end
-        result[i] = s / count
+        result[i] = s / length(r)
     end
     return result
 end
@@ -181,15 +183,12 @@ end
     n = length(y)
     length(out) == n || throw(DimensionMismatch("out must have the same length as y"))
     @inbounds for i in 1:n
-        left_start = max(1, i - k) - min(0, n - i - k + 1)
-        right_end = min(i + k, n) + min(0, i - k)
+        r = shifted_window(i, k, n)
         s = zero(T)
-        count = 0
-        @simd for j in left_start:right_end
+        @simd for j in r
             s += y[j]
-            count += 1
         end
-        out[i] = s / count
+        out[i] = s / length(r)
     end
     return out
 end
@@ -223,9 +222,8 @@ end
     n = length(y)
     result = Vector{T}(undef, n)
     @inbounds for i in 1:n
-        left = (max(1, i - k) - min(0, n - i - k + 1)):(i - 1)
-        right = i:(min(i + k, n) + min(0, i - k))
-        result[i] = linear_regression_ranges(x, y, left, right, x[i])
+        r = shifted_window(i, k, n)
+        result[i] = linear_regression(@view(x[r]), @view(y[r]), x[i])
     end
     return result
 end
@@ -235,9 +233,8 @@ end
     n = length(y)
     length(out) == n || throw(DimensionMismatch("out must have the same length as y"))
     @inbounds for i in 1:n
-        left = (max(1, i - k) - min(0, n - i - k + 1)):(i - 1)
-        right = i:(min(i + k, n) + min(0, i - k))
-        out[i] = linear_regression_ranges(x, y, left, right, x[i])
+        r = shifted_window(i, k, n)
+        out[i] = linear_regression(@view(x[r]), @view(y[r]), x[i])
     end
     return out
 end
@@ -246,37 +243,31 @@ end
     loocv(x, y, smoother) -> (cv, ysmoothed)
 
 Leave-one-out cross-validation for windowed smoothers
-(`LAS`, `LASb`, `LLSS`, `LLSSb`). Returns the absolute LOO residuals and the
-full smoothed curve.
+(`LAS`, `LASb`, `LLSS`, `LLSSb`). `cv[i]` is the absolute residual at `x[i]` of
+the fit over the window of `i` with point `i` left out; `ysmoothed` is the full
+smoothed curve. A window holding only `i` leaves nothing to fit, and gives
+`cv[i] = 0`.
 """
 @stable function loocv(x::AbstractVector{T}, y::AbstractVector{T}, smoother::V) where {T<:Real, V<:Union{LAS,LASb,LLSS,LLSSb}}
     k = validate_inputs(x, y, smoother.window)
     n = length(x)
     ysmoothed = do_smoothing(x, y, smoother)
-    cv = Vector{Float64}(undef, n)
-    @inbounds for i in 1:n
-        lo = max(1, i - k)
-        hi = min(n, i + k)
-        cnt = hi - lo + 1 - 1  # exclude i
-        cnt > 0 || continue
-        xm = zero(T)
-        for j in lo:hi
-            j == i && continue
-            xm += x[j]
-        end
-        xm /= cnt
-        v = zero(T)
-        for j in lo:hi
-            j == i && continue
-            d = x[j] - xm
-            v += d * d
-        end
-        v /= cnt
-        denom = (1.0 - 1.0 / (2 * k)) - (v ≈ 0.0 ? 0.0 : (x[i] - xm) / v)
-        cv[i] = abs(denom) < eps() ? 0.0 : (y[i] - ysmoothed[i]) / denom
+    cv = Vector{T}(undef, n)
+    for i in 1:n
+        r = window(smoother, i, k, n)
+        left, right = first(r):(i - 1), (i + 1):last(r)
+        cv[i] = length(r) == 1 ? zero(T) : abs(y[i] - loo_fit(smoother, x, y, left, right, x[i]))
     end
-    return abs.(cv), ysmoothed
+    return cv, ysmoothed
 end
+
+window(::Union{LAS,LLSS}, i, k, n) = truncated_window(i, k, n)
+window(::Union{LASb,LLSSb}, i, k, n) = shifted_window(i, k, n)
+
+function loo_fit(::Union{LAS,LASb}, x, y, left, right, xi)
+    return (sum(view(y, left); init=zero(xi)) + sum(view(y, right); init=zero(xi))) / (length(left) + length(right))
+end
+loo_fit(::Union{LLSS,LLSSb}, x, y, left, right, xi) = linear_regression_ranges(x, y, left, right, xi)
 
 Base.show(io::IO, s::LAS) = print(io, "LAS($(s.window))")
 Base.show(io::IO, s::LASb) = print(io, "LASb($(s.window))")

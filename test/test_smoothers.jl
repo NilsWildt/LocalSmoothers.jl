@@ -117,6 +117,43 @@ end
     @test_throws ArgumentError do_smoothing(x, y, LAS(100))  # window >= n
 end
 
+@testitem "boundary-adjusted smoothers keep the full window at the edges" begin
+    n = 10
+    x = collect(1.0:n)
+    # LASb(5): 5-point windows, shifted inward at the edges -> 1:5 for i ≤ 3, 6:10 for i ≥ 8.
+    @test do_smoothing(x, x, LASb(5)) ≈ [3, 3, 3, 4, 5, 6, 7, 8, 8, 8]
+    y = x .^ 2
+    linfit(r, xi) = ([ones(length(r)) x[r]] \ y[r])' * [1, xi]
+    out = do_smoothing(x, y, LLSSb(5))
+    @test out[1] ≈ linfit(1:5, x[1])
+    @test out[2] ≈ linfit(1:5, x[2])
+    @test out[10] ≈ linfit(6:10, x[10])
+    @test do_smoothing!(similar(y), x, y, LASb(5)) ≈ do_smoothing(x, y, LASb(5))
+    @test do_smoothing!(similar(y), x, y, LLSSb(5)) ≈ out
+end
+
+@testitem "loocv matches refitting without each point" begin
+    n = 40
+    x = collect(((1:n) ./ n) .^ 1.5)  # non-uniform spacing
+    y = sin.(4 .* x) .+ 0.1 .* sin.(97 .* (1:n))
+    k = 3  # window 7
+    truncated(i) = max(1, i - k):min(n, i + k)
+    shifted(i) = (lo = clamp(i - k, 1, n - 2k); lo:(lo + 2k))
+    mean_fit(r, i) = sum(y[j] for j in r if j != i) / (length(r) - 1)
+    function line_fit(r, i)
+        o = [j for j in r if j != i]
+        return ([ones(length(o)) x[o]] \ y[o])' * [1, x[i]]
+    end
+    for (sm, window, fit) in ((LAS(7), truncated, mean_fit), (LASb(7), shifted, mean_fit),
+                              (LLSS(7), truncated, line_fit), (LLSSb(7), shifted, line_fit))
+        cv, ys = loocv(x, y, sm)
+        @test ys ≈ do_smoothing(x, y, sm)
+        @test cv ≈ [abs(y[i] - fit(window(i), i)) for i in 1:n]
+    end
+    cv32, _ = loocv(Float32.(x), Float32.(y), LLSSb(7))
+    @test eltype(cv32) == Float32
+end
+
 @testitem "loocv" begin
     n = 100
     x = collect(range(0.0, 1.0, length=n))
