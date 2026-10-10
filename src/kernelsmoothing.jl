@@ -33,9 +33,8 @@ function do_smoothing(x::AbstractVector{<:Real}, y::AbstractVector{<:Real}, smoo
     Nx = length(x)
     xm = reshape(float.(x), Nx, 1)
     ym = reshape(float.(y), Nx, 1)
-    xeval = reshape(collect(range(x[1], x[end], length=Nx)), Nx, 1)
     interp = get_kernel_interpolant(xm, ym, smoother.smoothk; reg=smoother.reg)
-    return vec(interp(xeval))
+    return vec(interp(xm))
 end
 
 function do_smoothing!(out::AbstractVector{<:Real}, x::AbstractVector{<:Real}, y::AbstractVector{<:Real}, smoother::Kernelsmooth)

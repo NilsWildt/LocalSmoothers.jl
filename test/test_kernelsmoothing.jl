@@ -9,6 +9,16 @@ using Test
     @test Kernelsmooth(g).reg == 1e-6
 end
 
+@testitem "Kernelsmooth evaluates on the input points" begin
+    # Non-uniform and unsorted: the output must line up with `x` itself, not
+    # with an even grid between its first and last entries.
+    x = [0.7, 0.0, 0.32, 1.0, 0.05, 0.3]
+    y = sin.(2 .* pi .* x)
+    out = do_smoothing(x, y, Kernelsmooth(Gaussian(0.05), 1e-10))
+    @test out ≈ y atol = 1e-6
+    @test do_smoothing!(similar(y), x, y, Kernelsmooth(Gaussian(0.05), 1e-10)) ≈ out
+end
+
 @testitem "NWKernelsmooth approximates the data for small bandwidth" begin
     using Statistics
     n = 200
