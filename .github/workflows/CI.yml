@@ -10,10 +10,15 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  actions: write
+  contents: read
+
 jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -22,11 +27,11 @@ jobs:
         # Apple-Silicon runner that matches the verified-green dev environment.
         os: [macos-latest]
     steps:
-      - uses: actions/checkout@v4
-      - uses: julia-actions/setup-julia@v2
+      - uses: actions/checkout@v7
+      - uses: julia-actions/setup-julia@v3
         with:
           version: ${{ matrix.version }}
-      - uses: julia-actions/cache@v2
+      - uses: julia-actions/cache@v3
       # Unregistered deps (SimpleKernelRegression) are resolved from the
       # [sources] section of Project.toml during instantiate.
       - uses: julia-actions/julia-buildpkg@v1
