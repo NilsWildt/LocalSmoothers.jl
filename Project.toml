@@ -17,7 +17,7 @@ SimpleKernelRegression = {url = "https://github.com/NilsWildt/SimpleKernelregres
 [compat]
 Aqua = "0.8"
 DispatchDoctor = "0.4"
-JET = "0.12"
+JET = "0.12, 0.13"
 PrecompileTools = "1"
 SimpleKernelRegression = "0.1"
 Statistics = "1"
